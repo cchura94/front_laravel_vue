@@ -1,4 +1,5 @@
 import axios from "axios"
+import { Buffer } from "buffer"
 
 export const urlBase = "http://127.0.0.1:8000/api";
 // export const urlBaseAsset = "http://127.0.0.1:8000";
@@ -8,7 +9,11 @@ export const urlBase = "http://127.0.0.1:8000/api";
  * @returns Axios
  */
 export function http(){
-    let token = localStorage.getItem("token")
+    let token ="";
+    if(localStorage.getItem("token")){
+
+        token = Buffer.from(localStorage.getItem("token"), 'base64').toString('ascii');
+    }
     
     const interceptor = axios.create({
         baseURL: urlBase,

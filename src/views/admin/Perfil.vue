@@ -1,6 +1,8 @@
 <template>
     <div class="card">
         <h1>PERFIL</h1>
+         <h1>{{ $store.state }}</h1>
+         <button type="button" @click="$store.state.contador++">+</button>
         <div v-if="datosPerfil">
             {{ datosPerfil }}
 

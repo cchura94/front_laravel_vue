@@ -3,6 +3,7 @@ import HomeView from '../views/HomeView.vue'
 import App from '../App.vue'
 import Perfil from '../views/admin/Perfil.vue'
 import Login  from '../views/auth/Login.vue'
+import { Buffer } from "buffer"
 
 const routes = [
   {
@@ -48,7 +49,8 @@ router.beforeEach((to, from, next) => {
   console.log(to)
   if(to.meta.requireAuth){
     // vuex
-    let token = localStorage.getItem("token")
+    let token = Buffer.from(localStorage.getItem("token"), 'base64').toString('ascii');
+    
     if(token){
       next()
     }
