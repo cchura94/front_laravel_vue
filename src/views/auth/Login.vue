@@ -56,7 +56,7 @@ import { Buffer } from "buffer"
 
 import * as authService from "@/service/AuthService.js";
 export default {
-    
+
     setup(){
         const router = useRouter()
         const store = useStore()
