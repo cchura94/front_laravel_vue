@@ -4,6 +4,8 @@ import App from '../App.vue'
 import Perfil from '../views/admin/Perfil.vue'
 import Login  from '../views/auth/Login.vue'
 import CategoriaView from "../views/admin/categoria/CategoriaView.vue"
+import ProductoView from "../views/admin/producto/ProductoView.vue"
+
 import { Buffer } from "buffer"
 
 const routes = [
@@ -41,6 +43,12 @@ const routes = [
         path: 'categoria',
         name: "Categoria",
         component: CategoriaView,
+        meta: {requireAuth: true}
+      },
+      {
+        path: 'producto',
+        name: "Producto",
+        component: ProductoView,
         meta: {requireAuth: true}
       }
     ]

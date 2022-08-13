@@ -2,7 +2,7 @@
   <div class="card">
     <h1>Gestion Categorias</h1>
 
-     <Button label="Show" icon="pi pi-external-link" @click="openModal" />
+     <Button label="Nueva Categoria" icon="pi pi-eye" @click="openModal" />
         <Dialog header="Categoria" v-model:visible="displayModal" :breakpoints="{'960px': '75vw', '640px': '90vw'}" :style="{width: '40vw'}" :modal="true" class="p-fluid">
             <pre>{{ errors }}</pre>
             <div class="field">
@@ -75,12 +75,21 @@ export default {
 
     const guardarCategoria = async () => {
       try {
-        await categoriaService.store(categoria.value)
-        // listarCategorias()
-        categorias.value.push(categoria.value)
-        closeModal()
-        toast.add({severity:'success', summary: 'Categoria Registrada', detail:'Registrado', life: 3000});
-        
+        if(categoria.value.id){
+          await categoriaService.update(categoria.value, categoria.value.id)
+          listarCategorias()
+          closeModal()
+          toast.add({severity:'success', summary: 'Categoria Actualizada', detail:'Modificado', life: 5000});
+          
+        }else{
+
+          await categoriaService.store(categoria.value)
+          // listarCategorias()
+          categorias.value.push(categoria.value)
+          closeModal()
+          toast.add({severity:'success', summary: 'Categoria Registrada', detail:'Registrado', life: 3000});
+          
+        }
       } catch (error) {
         console.log("*********: ", error.response.data)
         errors.value = error.response.data
@@ -93,6 +102,7 @@ export default {
     }
     const closeModal = () => {
       displayModal.value = false
+      categoria.value = {}
     }
 
     
