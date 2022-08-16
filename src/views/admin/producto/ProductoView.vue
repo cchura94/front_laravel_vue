@@ -15,7 +15,7 @@
 
         <DataTable ref="dt" :value="products" :lazy="true" v-model:selection="selectedProducts" dataKey="id" 
                 :paginator="true" :rows="5" :filters="filters" :totalRecords="totalRecords" :loading="loading"
-                @page="onPage($event)"
+                @page="onPage($event)" @filter="onFilter($event)"
                 paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown" :rowsPerPageOptions="[5,10,25]"
                 currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products" responsiveLayout="scroll">
                 <template #header>
@@ -23,7 +23,7 @@
 						<h5 class="mb-2 md:m-0 p-as-md-center">Gestión Productos</h5>
 						<span class="p-input-icon-left">
                             <i class="pi pi-search" />
-                            <InputText v-model="filters['global'].value" placeholder="Search..." />
+                            <InputText v-model="filters['global'].value" @keydown.enter="buscar()" placeholder="Buscar..." />
                         </span>
 					</div>
                 </template>
@@ -33,7 +33,7 @@
                 <Column field="nombre" header="NOMBRE" :sortable="true" style="min-width:16rem"></Column>
                 <Column header="Image">
                      <template #body="slotProps">
-                        <img src="https://www.primefaces.org/wp-content/uploads/2020/05/placeholder.png" :alt="slotProps.data.image" class="product-image" />
+                        <img :src="`${asset}/${slotProps.data.imagen}`" :alt="slotProps.data.image" class="product-image" />
                     </template>
                 </Column>
                 <Column field="precio" header="PRECIO" :sortable="true" style="min-width:8rem">
@@ -45,6 +45,7 @@
                
                 <Column :exportable="false" style="min-width:8rem">
                     <template #body="slotProps">
+                        <Button label="IMG" icon="pi pi-external-link" @click="openModalImagen(slotProps.data)" />
                         <Button icon="pi pi-pencil" class="p-button-rounded p-button-success mr-2" @click="editProduct(slotProps.data)" />
                         <Button icon="pi pi-trash" class="p-button-rounded p-button-warning" @click="confirmDeleteProduct(slotProps.data)" />
                     </template>
@@ -91,8 +92,18 @@
             </template>
             <pre>{{product}}</pre>
         </Dialog>
-  </div>
 
+        
+        <Dialog header="Header" v-model:visible="displayModalImg" :breakpoints="{'960px': '75vw', '640px': '90vw'}" :style="{width: '50vw'}" :modal="true">
+           <FileUpload name="demo[]" @upload="onUpload" :customUpload="true" @uploader="onImagenSeleccionada" accept="image/*" :maxFileSize="1000000">
+                <template #empty>
+                    <p>Drag and drop files to here to upload.</p>
+                </template>
+            </FileUpload>
+
+        </Dialog>
+  </div>
+<Toast />
 </div>
 </template>
 
@@ -101,9 +112,18 @@ import { FilterMatchMode } from 'primevue/api';
 import {ref, onMounted} from "vue"
 import * as productoService from "@/service/ProductoService.js"
 import * as categoriaService from "@/service/CategoriaService"
+import { urlBaseAsset } from "@/service/Http.js"
+import { useToast } from 'primevue/usetoast';
 
 export default {
+    data(){
+        return {
+            asset: urlBaseAsset
+        }
+    },
     setup(){
+
+        const toast = useToast();
 
         onMounted(() => {
             // productService.value.getProducts().then(data => products.value = data);
@@ -113,6 +133,7 @@ export default {
 
 
         const productDialog = ref(false);
+        const displayModalImg = ref(false)
         const product = ref({})
         const products = ref()
         const categorias = ref([])
@@ -129,6 +150,7 @@ export default {
         const loading = ref(false);
         const totalRecords = ref(0);
         const lazyParams = ref({});
+        const id_producto = ref(null)
 
 
         const getCategorias = async () => {
@@ -142,15 +164,29 @@ export default {
         }
 
         const onPage = (event) => {
+            console.log(lazyParams.value)
             lazyParams.value = event;
             getProductos();
         };
 
+         const onFilter = () => {
+            lazyParams.value.filters = filters.value ;
+            getProductos();
+        }
+
+        const buscar = () => {
+            console.log(filters.value.global.value)
+            getProductos();
+        }
+
         const getProductos = async () => {
             try {
                 loading.value=true
+                let rows = lazyParams.value.rows
+                let q = filters.value.global.value == null?'':filters.value.global.value;
+                let page = (lazyParams.value.page == null)?0:lazyParams.value.page
                 
-                const {data} = await productoService.index(lazyParams.value.page + 1);
+                const {data} = await productoService.index(page + 1, rows, q);
                 products.value = data.data
                 totalRecords.value = data.total
 
@@ -186,7 +222,31 @@ export default {
 			return;
         };
 
+const openModalImagen = (prod) => {
+            id_producto.value = prod.id
+            displayModalImg.value = true;
+        };
+        const closeModalImagen = () => {
+            id_producto.value = null
+            displayModalImg.value = false;
+        }
 
+        const onUpload = () => {
+            toast.add({severity: 'info', summary: 'Success', detail: 'File Uploaded', life: 3000});
+        }
+
+        const onImagenSeleccionada = async (event) => {
+            console.log(event.files[0])
+            let fd = new FormData();
+            fd.append("imagen", event.files[0])
+            fd.append("_method", 'PUT')
+
+            await productoService.actualizarImagen(fd, id_producto.value)
+
+            getProductos()
+            closeModalImagen()
+            toast.add({severity: 'info', summary: 'Success', detail: 'File Uploaded', life: 3000});
+        }
 
         return {
             openDialogNuevo,
@@ -205,7 +265,14 @@ export default {
             loading,
             totalRecords,
             onPage,
-            lazyParams
+            lazyParams,
+            onFilter,
+            buscar,
+            openModalImagen,
+            closeModalImagen,
+            displayModalImg,
+            onUpload,
+            onImagenSeleccionada
         }
     }
 }

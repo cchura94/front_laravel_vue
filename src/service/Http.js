@@ -3,7 +3,7 @@ import { Buffer } from "buffer"
 
 export const urlBase = "https://back-ventas.herokuapp.com/api";
 // export const urlBase = "http://127.0.0.1:8000/api";
-// export const urlBaseAsset = "http://127.0.0.1:8000";
+export const urlBaseAsset = "https://back-ventas.herokuapp.com";
 
 /**
  * Configuracion de axios (Interceptor)
