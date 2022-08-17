@@ -52,7 +52,7 @@
                 </Column>
             </DataTable>
 
-        <Dialog v-model:visible="productDialog" :style="{width: '450px'}" header="Product Details" :modal="true" class="p-fluid">
+        <Dialog v-model:visible="productDialog" :style="{width: '450px'}" :header="(product.id)?'Editar Producto':'Nuevo Producto'" :modal="true" class="p-fluid">
             <img src="https://www.primefaces.org/wp-content/uploads/2020/05/placeholder.png" :alt="product.image" class="product-image" v-if="product.image" />
             <div class="field">
                 <label for="name">Nombre</label>
@@ -87,8 +87,8 @@
                 </div>
             </div>
             <template #footer>
-                <Button label="Cancel" icon="pi pi-times" class="p-button-text" @click="hideDialog"/>
-                <Button label="Save" icon="pi pi-check" class="p-button-text" @click="guardarProducto" />
+                <Button label="Cancelar" icon="pi pi-times" class="p-button-text" @click="hideDialog"/>
+                <Button :label="(product.id)?'Actualizar':'Guardar'" icon="pi pi-check" class="p-button-text" @click="guardarProducto" />
             </template>
             <pre>{{product}}</pre>
         </Dialog>
@@ -198,22 +198,33 @@ export default {
         }
 
         const openDialogNuevo = () => {
+            product.value = {}
             productDialog.value = true
         }
 
         const guardarProducto = async () =>{
-
-            try {
-                const {data} = await productoService.store(product.value)
-
-                productDialog.value = false;
-                product.value = {};
-
+            if (product.value.id) {
+                const {data} = await productoService.update(product.value, product.value.id)
                 getProductos()
+                hideDialog()
+            }else{
 
-             } catch (error) {
-                console.log(error)
+                try {
+                    const {data} = await productoService.store(product.value)
+    
+                    productDialog.value = false;
+                    product.value = {};
+    
+                    getProductos()
+
+                    hideDialog()
+    
+                 } catch (error) {
+                    console.log(error)
+                }
             }
+            
+
         }
 
         const formatCurrency = (value) => {
@@ -248,6 +259,15 @@ const openModalImagen = (prod) => {
             toast.add({severity: 'info', summary: 'Success', detail: 'File Uploaded', life: 3000});
         }
 
+        const editProduct = (prod) => {
+            product.value = {...prod};
+            productDialog.value = true;
+        };
+        const hideDialog = () => {
+            productDialog.value = false;
+            submitted.value = false;
+        };
+
         return {
             openDialogNuevo,
             productDialog,
@@ -272,7 +292,9 @@ const openModalImagen = (prod) => {
             closeModalImagen,
             displayModalImg,
             onUpload,
-            onImagenSeleccionada
+            onImagenSeleccionada,
+            editProduct,
+            hideDialog
         }
     }
 }
