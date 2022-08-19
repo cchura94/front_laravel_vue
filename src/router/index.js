@@ -82,10 +82,12 @@ router.beforeEach((to, from, next) => {
     
     if(token){
       next()
+    }else{
+      next({name: 'Login'})
     }
-    next("/login")
+  }else{
+    next()
   }
-  next()
 })
 
 

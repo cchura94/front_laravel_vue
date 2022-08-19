@@ -6,8 +6,7 @@
 
     <div class="col-8">
       <div class="card">
-        
-      <ListaProducto 
+        <ListaProducto
           :products="products"
           :filters="filters"
           :totalRecords="totalRecords"
@@ -15,9 +14,8 @@
           :asset="asset"
           :formatCurrency="formatCurrency"
           :addCarrito="addCarrito"
-          :buscar="buscar" />
-    
-
+          :buscar="buscar"
+        />
       </div>
     </div>
     <div class="col-4">
@@ -43,24 +41,45 @@
       <div class="col-12">
         <div class="card">
           <h5>CLIENTE</h5>
-          <span class="p-input-icon-left">
-            <i class="pi pi-search" />
-            <InputText
-              v-model="filters['global'].value"
-              @keydown.enter="buscar()"
-              placeholder="buscar..."
-            />
-
-            <Button
-              label="Nuevo Cliente"
-              icon="pi pi-user"
-              @click="openNuevoCLienteModal"
-            />
-          </span>
+          <div class="grid">
+            <div class="col-8">
+              <span class="p-input-icon-left">
+                <i class="pi pi-search" />
+                <InputText
+                  v-model="buscarCliente"
+                  @keydown.enter="buscar()"
+                  placeholder="buscar..."
+                />
+              </span>
+                <template v-if="cliente_preview.id">
+                  <h6>NOMBRE CLIENTE:</h6>
+                  <p>{{ cliente_preview.nombre_completo }}</p>
+                  <h6>CI/NIT: </h6>
+                  <p>{{ cliente_preview.ci_nit }}</p>
+                </template>
+                <template v-else>
+                  <h6>CLIENTE NO ENCOTRADO</h6>
+                </template>
+            </div>
+            <div class="col-4">
+              <Button
+                class="p-button-sm"
+                label="Nuevo Cliente"
+                icon="pi pi-user"
+                @click="openNuevoCLienteModal"
+              />
+            </div>
+          </div>
         </div>
       </div>
       <div class="col-12">
-        <div class="card">Boton Guardar</div>
+        <div class="card">
+          <Button
+                label="Guardar Pedido"
+                icon="pi pi-user"
+                @click="guardarPedido"
+              />
+        </div>
       </div>
     </div>
   </div>
@@ -71,6 +90,7 @@
     :breakpoints="{ '960px': '75vw', '640px': '90vw' }"
     :style="{ width: '50vw' }"
     :modal="true"
+    class="p-fluid"
   >
     <div class="field">
       <label for="name">Nombre Cliente</label>
@@ -126,7 +146,7 @@
         @click="closeModal"
         class="p-button-text"
       />
-      <Button label="Yes" icon="pi pi-check" @click="closeModal" autofocus />
+      <Button label="Guardar Cliente" icon="pi pi-check" @click="guardarCliente" autofocus />
     </template>
   </Dialog>
 </template>
@@ -135,15 +155,18 @@
 import { FilterMatchMode } from "primevue/api";
 import { ref, onMounted } from "vue";
 import * as productoService from "@/service/ProductoService.js";
+import * as clienteService from "@/service/ClienteService.js"
+import * as pedidoService from "@/service/PedidoService.js"
+
 import { urlBaseAsset } from "@/service/Http.js";
 import { useToast } from "primevue/usetoast";
-import ListaProducto from "@/components/pedido/ListaProductoPedido.vue"
-import Test from "@/components/pedido/Prueba.vue"
+import ListaProducto from "@/components/pedido/ListaProductoPedido.vue";
+import Test from "@/components/pedido/Prueba.vue";
 
 export default {
   components: {
     ListaProducto,
-    Test
+    Test,
   },
   data() {
     return {
@@ -161,11 +184,13 @@ export default {
     const product = ref({});
     const cliente = ref({});
     const products = ref([]);
+    const cliente_preview = ref({})
 
     const dt = ref();
     const filters = ref({
       global: { value: null, matchMode: FilterMatchMode.CONTAINS },
     });
+    const buscarCliente = ref()
 
     const loading = ref(false);
     const totalRecords = ref(0);
@@ -189,9 +214,10 @@ export default {
       getProductos();
     };
 
-    const buscar = () => {
-      console.log(filters.value.global.value);
-      getProductos();
+    const buscar = async () => {
+      console.log(buscarCliente.value);
+      const {data} = await clienteService.index(buscarCliente.value)
+      cliente_preview.value = data
     };
 
     const getProductos = async () => {
@@ -235,6 +261,20 @@ export default {
       displayClienteModal.value = true;
     };
 
+    const guardarCliente = async() => {
+      const {data} = await clienteService.store(cliente.value)
+      cliente_preview.value = data
+    }
+
+    const guardarPedido = async () => {
+      let pedido = {
+        cliente_id: cliente_preview.value.id,
+        productos: carrito.value
+      }
+
+      const {data}= await pedidoService.store(pedido);
+    }
+
     return {
       product,
       products,
@@ -254,6 +294,10 @@ export default {
       displayClienteModal,
       openNuevoCLienteModal,
       cliente,
+      guardarPedido,
+      cliente_preview,
+      guardarCliente,
+      buscarCliente
     };
   },
 };

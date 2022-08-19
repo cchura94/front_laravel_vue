@@ -45,7 +45,7 @@ export default {
 					items: [
 						{label: 'Categoria', icon: 'pi pi-fw pi-id-card', to: '/admin/categoria'},
 						{label: 'Producto', icon: 'pi pi-fw pi-check-square', to: '/admin/producto'},
-                        {label: "Cliente", icon: "pi pi-fw pi-bookmark", to: "/floatlabel"},
+                        {label: "Cliente", icon: "pi pi-fw pi-bookmark", to: "/admin/categoria"},
                         
 					]
 				},

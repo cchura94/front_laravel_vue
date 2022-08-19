@@ -46,10 +46,10 @@ import * as categoriaService from "@/service/CategoriaService.js"
 export default {
 
   props: {
-    guardar: {
+    /*guardar: {
       type: Function,
-      required: true
-    }
+      required: false
+    }*/
   },
 
   setup(){
